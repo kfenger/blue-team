@@ -1,6 +1,5 @@
-topology:
-  name: blue_team_sandbox
-  description: Sandbox for Blue Team training with Wazuh and Grafana
+name: blue_team_sandbox
+description: Sandbox for Blue Team training with Wazuh and Grafana
 
 hosts:
   - name: wazuh_manager
@@ -57,13 +56,6 @@ routers:
     interfaces:
       - network: internal_net
       - network: monitoring_net
-
-links:
-  - router: internal_to_monitoring
-    network: internal_net
-
-  - router: internal_to_monitoring
-    network: monitoring_net
 
 monitoring_targets:
   - host: win_host1
