@@ -54,7 +54,9 @@ routers:
   - name: internal-to-monitoring
     interfaces:
       - network: internal-net
+        ip: 10.0.0.1
       - network: monitoring-net
+        ip: 10.1.0.1
 
 monitoring_targets:
   - host: win-host1
