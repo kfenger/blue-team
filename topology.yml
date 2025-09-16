@@ -58,4 +58,3 @@ monitoring_targets:
     target: wazuh-manager
   - host: linux-host
     target: wazuh-manager
-e
