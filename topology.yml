@@ -2,67 +2,67 @@ name: blue-team-sandbox
 description: Sandbox for Blue Team training with Wazuh and Grafana
 
 hosts:
-  - name: wazuh_manager
+  - name: wazuh-manager
     base_box: debian-10-x86_64
     flavor: medium
     mgmt_user: debian
     networks:
-      - monitoring_net
+      - monitoring-net
 
   - name: grafana
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
     networks:
-      - monitoring_net
+      - monitoring-net
 
-  - name: win_host1
+  - name: win-host1
     base_box: windows-10
     flavor: small
     mgmt_user: Administrator
     networks:
-      - internal_net
+      - internal-net
 
-  - name: win_host2
+  - name: win-host2
     base_box: windows-10
     flavor: small
     mgmt_user: Administrator
     networks:
-      - internal_net
+      - internal-net
 
-  - name: linux_host1
+  - name: linux-host1
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
     networks:
       - internal_net
 
-  - name: linux_host2
+  - name: linux-host2
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
     networks:
-      - internal_net
+      - internal-net
 
 networks:
-  - name: internal_net
+  - name: internal-net
     cidr: 10.0.0.0/24
 
-  - name: monitoring_net
+  - name: monitoring-net
     cidr: 10.1.0.0/24
 
 routers:
-  - name: internal_to_monitoring
+  - name: internal-to-monitoring
     interfaces:
-      - network: internal_net
-      - network: monitoring_net
+      - network: internal-net
+      - network: monitoring-net
 
 monitoring_targets:
-  - host: win_host1
-    target: wazuh_manager
-  - host: win_host2
-    target: wazuh_manager
-  - host: linux_host1
-    target: wazuh_manager
-  - host: linux_host2
-    target: wazuh_manager
+  - host: win-host1
+    target: wazuh-manager
+  - host: win-host2
+    target: wazuh-manager
+  - host: linux-host1
+    target: wazuh-manager
+  - host: linux-host2
+    target: wazuh-manager
