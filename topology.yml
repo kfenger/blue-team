@@ -58,6 +58,12 @@ routers:
       - network: monitoring-net
         ip: 10.1.0.1
 
+router_mappings:
+  - router: internal-to-monitoring
+    network: internal-net
+  - router: internal-to-monitoring
+    network: monitoring-net
+
 monitoring_targets:
   - host: win-host1
     target: wazuh-manager
