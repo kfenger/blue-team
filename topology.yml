@@ -1,5 +1,4 @@
 name: blue-team-sandbox
-description: Sandbox for Blue Team training with Wazuh and Grafana
 
 hosts:
   - name: wazuh-manager
@@ -35,7 +34,7 @@ hosts:
     flavor: small
     mgmt_user: debian
     networks:
-      - internal_net
+      - internal-net
 
   - name: linux-host2
     base_box: debian-10-x86_64
