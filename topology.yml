@@ -1,68 +1,76 @@
-name: small-sandbox
+topology:
+  name: blue_team_sandbox
+  description: Sandbox for Blue Team training with Wazuh and Grafana
+
 hosts:
-  - name: server
-    base_box:
-      image: debian-12-x86_64
-      mgmt_user: debian
-    flavor: standard.small
-    hidden: True
-    volumes:
-      - size: 16
-      - size: 2
-      - size: 9
+  - name: wazuh_manager
+    base_box: debian-10-x86_64
+    flavor: medium
+    mgmt_user: debian
+    networks:
+      - monitoring_net
 
-  - name: home
-    base_box:
-      image: windows-10-0.2.0
-      mgmt_user: windows
-      mgmt_protocol: wirm
-    flavor: standard.small
+  - name: grafana
+    base_box: debian-10-x86_64
+    flavor: small
+    mgmt_user: debian
+    networks:
+      - monitoring_net
 
-routers:
-  - name: server-router
-    base_box:
-      image: debian-12-x86_64
-      mgmt_user: debian
-    flavor: standard.small
+  - name: win_host1
+    base_box: windows-10
+    flavor: small
+    mgmt_user: Administrator
+    networks:
+      - internal_net
 
-  - name: home-router
-    base_box:
-      image: debian-12-x86_64
-      mgmt_user: debian
-    flavor: standard.small
+  - name: win_host2
+    base_box: windows-10
+    flavor: small
+    mgmt_user: Administrator
+    networks:
+      - internal_net
 
-wan:
-  name: internet-connection
-  cidr: 100.100.100.0/24
+  - name: linux_host1
+    base_box: debian-10-x86_64
+    flavor: small
+    mgmt_user: debian
+    networks:
+      - internal_net
+
+  - name: linux_host2
+    base_box: debian-10-x86_64
+    flavor: small
+    mgmt_user: debian
+    networks:
+      - internal_net
 
 networks:
-  - name: server-switch
-    cidr: 10.10.20.0/24
-    accessible_by_user: False
+  - name: internal_net
+    cidr: 10.0.0.0/24
 
-  - name: home-switch
-    cidr: 10.10.30.0/24
+  - name: monitoring_net
+    cidr: 10.1.0.0/24
 
-net_mappings:
-    - host: server
-      network: server-switch
-      ip: 10.10.20.5
+routers:
+  - name: internal_to_monitoring
+    interfaces:
+      - network: internal_net
+      - network: monitoring_net
 
-    - host: home
-      network: home-switch
-      ip: 10.10.30.5
+links:
+  - router: internal_to_monitoring
+    network: internal_net
 
-router_mappings:
-    - router: server-router
-      network: server-switch
-      ip: 10.10.20.1
+  - router: internal_to_monitoring
+    network: monitoring_net
 
-    - router: home-router
-      network: home-switch
-      ip: 10.10.30.1
-
-groups:
-  - name: custom-group
-    nodes:
-      - home
-      - home-router
+monitoring_targets:
+  - host: win_host1
+    target: wazuh_manager
+  - host: win_host2
+    target: wazuh_manager
+  - host: linux_host1
+    target: wazuh_manager
+  - host: linux_host2
+    target: wazuh_manager
