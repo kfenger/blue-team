@@ -5,6 +5,7 @@ hosts:
     base_box: debian-10-x86_64
     flavor: medium
     mgmt_user: debian
+    mgmt_protocol: ssh
     networks:
       - monitoring-net
 
@@ -12,6 +13,7 @@ hosts:
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
+    mgmt_protocol: ssh
     networks:
       - monitoring-net
 
@@ -19,6 +21,7 @@ hosts:
     base_box: windows-10
     flavor: small
     mgmt_user: Administrator
+    mgmt_protocol: winrm
     networks:
       - internal-net
 
@@ -26,6 +29,7 @@ hosts:
     base_box: windows-10
     flavor: small
     mgmt_user: Administrator
+    mgmt_protocol: winrm
     networks:
       - internal-net
 
@@ -33,6 +37,7 @@ hosts:
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
+    mgmt_protocol: ssh
     networks:
       - internal-net
 
@@ -40,6 +45,7 @@ hosts:
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
+    mgmt_protocol: ssh
     networks:
       - internal-net
 
@@ -51,12 +57,18 @@ networks:
     cidr: 10.1.0.0/24
 
 routers:
-  - name: internal-router
+  - name: internal-to-monitoring
     interfaces:
       - network: internal-net
-        type: static
+        ip: 10.0.0.1
       - network: monitoring-net
-        type: static
+        ip: 10.1.0.1
+
+router_mappings:
+  - router: internal-to-monitoring
+    network: internal-net
+  - router: internal-to-monitoring
+    network: monitoring-net
 
 monitoring_targets:
   - host: win-host1
