@@ -1,74 +1,54 @@
 name: blue-team-sandbox
 
 hosts:
-  wazuh-manager:
+  - name: wazuh-manager
     base_box: debian-10-x86_64
     flavor: medium
     mgmt_user: debian
     mgmt_protocol: ssh
-    networks: [monitoring-net]
+    networks:
+      - monitoring-net
 
-  grafana:
+  - name: grafana
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
     mgmt_protocol: ssh
-    networks: [monitoring-net]
+    networks:
+      - monitoring-net
 
-  win-host1:
+  - name: win-host1
     base_box: windows-10
     flavor: small
     mgmt_user: Administrator
     mgmt_protocol: winrm
-    networks: [internal-net]
+    networks:
+      - internal-net
 
-  win-host2:
+  - name: win-host2
     base_box: windows-10
     flavor: small
     mgmt_user: Administrator
     mgmt_protocol: winrm
-    networks: [internal-net]
+    networks:
+      - internal-net
 
-  linux-host1:
+  - name: linux-host1
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
     mgmt_protocol: ssh
-    networks: [internal-net]
+    networks:
+      - internal-net
 
-  linux-host2:
+  - name: linux-host2
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
     mgmt_protocol: ssh
-    networks: [internal-net]
+    networks:
+      - internal-net
 
 networks:
-  internal-net:
+  - name: internal-net
     cidr: 10.0.0.0/24
-  monitoring-net:
-    cidr: 10.1.0.0/24
-
-routers:
-  internal-to-monitoring:
-    interfaces:
-      - network: internal-net
-        ip: 10.0.0.1
-      - network: monitoring-net
-        ip: 10.1.0.1
-
-router_mappings:
-  - router: internal-to-monitoring
-    network: internal-net
-  - router: internal-to-monitoring
-    network: monitoring-net
-
-monitoring_targets:
-  - host: win-host1
-    target: wazuh-manager
-  - host: win-host2
-    target: wazuh-manager
-  - host: linux-host1
-    target: wazuh-manager
-  - host: linux-host2
-    target:
