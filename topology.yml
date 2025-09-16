@@ -54,7 +54,9 @@ routers:
   - name: internal-router
     interfaces:
       - network: internal-net
+        type: static
       - network: monitoring-net
+        type: static
 
 monitoring_targets:
   - host: win-host1
