@@ -17,7 +17,7 @@ hosts:
     networks:
       - monitoring-net
 
-  - name: win-host1
+  - name: win-host
     base_box: windows-10
     flavor: small
     mgmt_user: Administrator
@@ -25,23 +25,7 @@ hosts:
     networks:
       - internal-net
 
-  - name: win-host2
-    base_box: windows-10
-    flavor: small
-    mgmt_user: Administrator
-    mgmt_protocol: winrm
-    networks:
-      - internal-net
-
-  - name: linux-host1
-    base_box: debian-10-x86_64
-    flavor: small
-    mgmt_user: debian
-    mgmt_protocol: ssh
-    networks:
-      - internal-net
-
-  - name: linux-host2
+  - name: linux-host
     base_box: debian-10-x86_64
     flavor: small
     mgmt_user: debian
@@ -70,11 +54,8 @@ router_mappings:
     network: monitoring-net
 
 monitoring_targets:
-  - host: win-host1
+  - host: win-host
     target: wazuh-manager
-  - host: win-host2
+  - host: linux-host
     target: wazuh-manager
-  - host: linux-host1
-    target: wazuh-manager
-  - host: linux-host2
-    target: wazuh-manager
+e
