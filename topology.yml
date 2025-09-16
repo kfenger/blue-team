@@ -1,4 +1,4 @@
-name: blue_team_sandbox
+name: blue-team-sandbox
 description: Sandbox for Blue Team training with Wazuh and Grafana
 
 hosts:
