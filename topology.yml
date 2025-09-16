@@ -51,18 +51,10 @@ networks:
     cidr: 10.1.0.0/24
 
 routers:
-  - name: internal-to-monitoring
+  - name: internal-router
     interfaces:
       - network: internal-net
-        ip: 10.0.0.1
       - network: monitoring-net
-        ip: 10.1.0.1
-
-router_mappings:
-  - router: internal-to-monitoring
-    network: internal-net
-  - router: internal-to-monitoring
-    network: monitoring-net
 
 monitoring_targets:
   - host: win-host1
