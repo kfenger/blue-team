@@ -52,3 +52,29 @@ hosts:
 networks:
   - name: internal-net
     cidr: 10.0.0.0/24
+  - name: monitoring-net
+    cidr: 10.1.0.0/24
+
+routers:
+  - name: internal-to-monitoring
+    interfaces:
+      - network: internal-net
+        ip: 10.0.0.1
+      - network: monitoring-net
+        ip: 10.1.0.1
+
+router_mappings:
+  - router: internal-to-monitoring
+    network: internal-net
+  - router: internal-to-monitoring
+    network: monitoring-net
+
+monitoring_targets:
+  - host: win-host1
+    target: wazuh-manager
+  - host: win-host2
+    target: wazuh-manager
+  - host: linux-host1
+    target: wazuh-manager
+  - host: linux-host2
+    target: wazuh-manager
