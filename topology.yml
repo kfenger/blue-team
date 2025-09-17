@@ -6,7 +6,7 @@ hosts:
       image: debian-12-x86_64
       mgmt_user: admin
       mgmt_protocol: ssh
-    flavor: standard.large
+    flavor: large
     volumes:
       - size: 50
 
@@ -15,21 +15,21 @@ hosts:
       image: debian-12-x86_64
       mgmt_user: attacker
       mgmt_protocol: ssh
-    flavor: standard.small
+    flavor: small
 
   - name: victim-vm
     base_box:
       image: debian-12-x86_64
       mgmt_user: trainee
       mgmt_protocol: ssh
-    flavor: standard.small
+    flavor: small
 
 routers:
   - name: lab-router
     base_box:
       image: debian-12-x86_64
       mgmt_user: debian
-    flavor: standard.small
+    flavor: small
 
 wan:
   name: internet-connection
