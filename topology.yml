@@ -1,5 +1,5 @@
 name: malcolm-minimal-topology
-description: "Minimal topology: 1 Malcolm-prep VM (Docker ready) for CyberRangeCZ sandbox"
+
 networks:
   - id: net-mgmt
     name: mgmt
@@ -12,12 +12,10 @@ hosts:
       image: ubuntu-22-image
       mgmt_user: admin
       mgmt_protocol: ssh
-    flavor: medium   # adjust to at least 'medium' or larger; you can change after testing
+    flavor: medium   # adjust resources later if needed
     networks:
       - net-mgmt
     provisioning:
       playbook: provisioning/provision_malcolm.yml
     monitor_groups:
       - monitor-os
-
-routing: []
