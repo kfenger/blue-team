@@ -5,10 +5,14 @@ networks:
     cidr: 10.50.10.0/24
     accessible_by_user: true
 
-nodes:
+  - name: lab
+    cidr: 192.168.70.0/24
+    accessible_by_user: true
+
+hosts:
   - name: malcolm-host
     base_box:
-      image: ubuntu-22-image        # <-- REPLACE med gyldig image-id fra din Image Pool
+      image: debian-12-x86_64
       mgmt_user: admin
       mgmt_protocol: ssh
     flavor: large
@@ -21,12 +25,12 @@ nodes:
 
   - name: attacker-vm
     base_box:
-      image: ubuntu-22-image
+      image: debian-12-x86_64
       mgmt_user: attacker
       mgmt_protocol: ssh
     flavor: small
     networks:
-      - mgmt
+      - lab
     provisioning:
       playbook: provisioning/provision_attacker.yml
     monitor_groups:
