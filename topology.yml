@@ -9,7 +9,7 @@ hosts:
   - name: malcolm-host
     base_box:
       # REPLACE with image name/id from your Image Pool (Ubuntu 22/20 recommended)
-      image: ubuntu-22-image
+      image: debian-12-x86_64
       mgmt_user: admin
       mgmt_protocol: ssh
     flavor: medium   # adjust resources later if needed
