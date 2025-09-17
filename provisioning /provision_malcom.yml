@@ -1,18 +1,20 @@
+# provisioning/provision_malcolm.yml
 - hosts: all
   become: true
   vars:
-    # Default values - platform APG vars override if used
-    malcolm_repo_url: "{{ lookup('env','MALCOLM_REPO_URL') | default('https://github.com/your-org/malcolm.git') }}"
-    malcolm_repo_revision: "{{ lookup('env','MALCOLM_REPO_REV') | default('main') }}"
-    docker_users:
-      - admin
+    malcolm_repo_url: "{{ apg_malcolm_repo_url | default('https://github.com/center-for-threat-informed-defense/malcolm') }}"
+    malcolm_repo_revision: "{{ apg_malcolm_repo_revision | default('main') }}"
+    docker_users: ["admin"]
+    pcap_mount: /mnt/pcap
+    opensearch_mount: /mnt/opensearch
+
   tasks:
-    - name: Ensure apt cache is up to date
+    - name: Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Install prerequisite packages
+    - name: Install prerequisites
       apt:
         name:
           - apt-transport-https
@@ -21,6 +23,7 @@
           - gnupg
           - lsb-release
           - git
+          - jq
         state: present
 
     - name: Add Docker GPG key
@@ -28,13 +31,12 @@
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
 
-    - name: Add Docker APT repository
+    - name: Add Docker APT repo
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
-        filename: docker
 
-    - name: Install Docker Engine and components
+    - name: Install Docker and containerd
       apt:
         name:
           - docker-ce
@@ -43,17 +45,17 @@
         state: present
         update_cache: yes
 
-    - name: Install Docker Compose plugin (if available)
-      apt:
-        name: docker-compose-plugin
-        state: present
-      ignore_errors: yes
-
-    - name: Ensure docker service is running
+    - name: Ensure docker service running
       service:
         name: docker
         state: started
         enabled: true
+
+    - name: Install docker compose plugin package (if available)
+      apt:
+        name: docker-compose-plugin
+        state: present
+      ignore_errors: yes
 
     - name: Add users to docker group
       user:
@@ -63,15 +65,28 @@
       loop: "{{ docker_users }}"
       ignore_errors: yes
 
-    - name: Create workspace for malcolm
+    - name: Create mountpoints for pcap and opensearch
       file:
-        path: /opt/malcolm
+        path: "{{ item }}"
         state: directory
         owner: root
         group: root
         mode: '0755'
+      loop:
+        - "{{ pcap_mount }}"
+        - "{{ opensearch_mount }}"
 
-    - name: Clone Malcolm repo (or update)
+    - name: Detect unmounted block devices (simple heuristic)
+      shell: |
+        lsblk -J -o NAME,MOUNTPOINT,SIZE | jq -r '.blockdevices[] | select(.mountpoint==null) | .name' || true
+      register: free_blockdevices
+      changed_when: false
+
+    - name: Debug block devices
+      debug:
+        var: free_blockdevices.stdout_lines
+
+    - name: Clone Malcolm repo
       git:
         repo: "{{ malcolm_repo_url }}"
         dest: /opt/malcolm
@@ -79,30 +94,22 @@
         force: yes
         accept_hostkey: yes
 
-    - name: Create marker file to show provisioning completed
+    - name: Write lab markers
       copy:
         dest: /var/lab_logs/malcolm_provisioned.txt
         content: |
           malcolm provisioned on {{ ansible_date_time.iso8601 }}
-          repo: {{ malcolm_repo_url }}
-          revision: {{ malcolm_repo_revision }}
+          malcolm_repo: {{ malcolm_repo_url }} @ {{ malcolm_repo_revision }}
         mode: '0644'
 
-    - name: Print next-steps instructions to lab log
+    - name: Write instructions file
       copy:
         dest: /var/lab_logs/malcolm_next_steps.txt
         content: |
-          Malcolm repo cloned to /opt/malcolm
-          To build/start Malcolm, SSH into this host and follow the Malcolm repository README.
-          Typical next steps (may vary by repo):
-            cd /opt/malcolm
-            # read README.md for exact build instructions
-            # e.g. ./build.sh  OR  docker compose up -d
-            # Ensure the host has sufficient RAM and disk before running the build.
+          Malcolm repo klonet til /opt/malcolm.
+          Neste steg (manuelt eller via ekstra playbook):
+            - Formater/monter volumer under /mnt/pcap og /mnt/opensearch om nødvendig
+            - cd /opt/malcolm && les README.md
+            - Kjør 'docker compose up -d' eller repo spesifikk build-script
+          Sørg for at VM har tilstrekkelig RAM og disk før oppstart!
         mode: '0644'
-
-    - name: Show quick guidance on console
-      debug:
-        msg:
-          - "Provisioning finished. Malcolm repo: {{ malcolm_repo_url }} @ {{ malcolm_repo_revision }}"
-          - "See /var/lab_logs/malcolm_next_steps.txt on the host for next steps."
