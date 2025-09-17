@@ -4,17 +4,14 @@ networks:
   - name: mgmt
     cidr: 10.50.10.0/24
     accessible_by_user: true
-  - name: lab
-    cidr: 192.168.70.0/24
-    accessible_by_user: true
 
-nodes:
+hosts:
   - name: malcolm-host
     base_box:
-      image: ubuntu-22-image     # <-- REPLACE med image i din pool
+      image: ubuntu-22-image        # <-- REPLACE med gyldig image-id fra din Image Pool
       mgmt_user: admin
       mgmt_protocol: ssh
-    flavor: large                # anbefalt for Malcolm (juster etter behov)
+    flavor: large
     networks:
       - mgmt
     provisioning:
@@ -29,21 +26,8 @@ nodes:
       mgmt_protocol: ssh
     flavor: small
     networks:
-      - lab
+      - mgmt
     provisioning:
       playbook: provisioning/provision_attacker.yml
-    monitor_groups:
-      - monitor-os
-
-  - name: victim-vm
-    base_box:
-      image: ubuntu-22-image
-      mgmt_user: trainee
-      mgmt_protocol: ssh
-    flavor: small
-    networks:
-      - lab
-    provisioning:
-      playbook: provisioning/provision_victim.yml
     monitor_groups:
       - monitor-os
