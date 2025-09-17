@@ -5,7 +5,7 @@ networks:
     cidr: 10.50.10.0/24
     accessible_by_user: true
 
-hosts:
+nodes:
   - name: malcolm-host
     base_box:
       image: ubuntu-22-image        # <-- REPLACE med gyldig image-id fra din Image Pool
