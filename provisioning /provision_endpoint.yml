@@ -1,0 +1,41 @@
+# provisioning/provision_endpoint.yml
+# Minimal endpoint provisioning:
+# - update apt
+# - install auditd/rsyslog
+# - create a test file that indicates provisioning succeeded
+# - (Optional) install and configure Wazuh-agent if you choose to enable agent-manager
+
+- hosts: all
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install endpoint packages
+      apt:
+        name:
+          - auditd
+          - rsyslog
+          - curl
+        state: present
+
+    - name: Ensure auditd running
+      service:
+        name: auditd
+        state: started
+        enabled: true
+
+    - name: Create provisioning marker file
+      copy:
+        dest: /tmp/endpoint_provisioned.txt
+        content: "endpoint-1 provisioned\n"
+        owner: root
+        mode: '0644'
+
+    - name: (Optional) Placeholder - Install Wazuh agent
+      debug:
+        msg: "If you want Wazuh agent, replace this debug task with the installation steps and manager configuration."
+
+# End of provision_endpoint.yml

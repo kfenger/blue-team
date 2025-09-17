@@ -1,0 +1,11 @@
+# variables.yml
+# Simple APG variables. Platform UI will expose disse ved opprettelse av instans.
+apg:
+  - name: enable_red_team
+    type: boolean
+    default: false
+    description: "Hvis true, vil red-team playbooks (ikke inkludert i denne minimale repo) kunne aktiveres."
+  - name: trainee_username
+    type: string
+    default: "trainee"
+    description: "Brukernavn som benyttes på endpoint for lab-tilgang"

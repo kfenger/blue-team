@@ -1,60 +1,50 @@
-name: blue-team-sandbox
+# topology.yml
+# Minimal Blue Team topology for CyberRangeCZ
+# Two nodes: siem-host (Ubuntu) and endpoint-1 (Ubuntu)
+# Edit image names to match your Image Pool IDs before use.
+
+name: blue-minimal-topology
+description: "Minimal blue-team lab: SIEM + 1 endpoint (for training). Keep minimal per docs."
+networks:
+  - id: net-mgmt
+    name: mgmt
+    cidr: 10.20.10.0/24
+  - id: net-corp
+    name: corp
+    cidr: 192.168.50.0/24
 
 hosts:
-  - name: wazuh-manager
-    base_box: debian-10-x86_64
+  - name: siem-host
+    base_box:
+      # <-- REPLACE image: with the exact image-id/name from your Image Pool
+      image: debian-12-x86_64	
+      mgmt_user: admin
+      mgmt_protocol: ssh
     flavor: medium
-    mgmt_user: debian
-    mgmt_protocol: ssh
     networks:
-      - monitoring-net
+      - net-mgmt
+    provisioning:
+      playbook: provisioning/provision_siem.yml
+    monitor_groups:
+      - monitor-os
 
-  - name: grafana
-    base_box: debian-10-x86_64
+  - name: endpoint-1
+    base_box:
+      image: debian-12-x86_64	
+      mgmt_user: trainee
+      mgmt_protocol: ssh
     flavor: small
-    mgmt_user: debian
-    mgmt_protocol: ssh
     networks:
-      - monitoring-net
+      - net-corp
+    provisioning:
+      playbook: provisioning/provision_endpoint.yml
+    monitor_groups:
+      - monitor-os
 
-  - name: win-host
-    base_box: windows-10
-    flavor: small
-    mgmt_user: Administrator
-    mgmt_protocol: winrm
-    networks:
-      - internal-net
-
-  - name: linux-host
-    base_box: debian-10-x86_64
-    flavor: small
-    mgmt_user: debian
-    mgmt_protocol: ssh
-    networks:
-      - internal-net
-
-networks:
-  - name: internal-net
-    cidr: 10.0.0.0/24
-  - name: monitoring-net
-    cidr: 10.1.0.0/24
-
-routers:
-  - name: internal-to-monitoring
-    interfaces:
-      - network: internal-net
-        ip: 10.0.0.1
-      - network: monitoring-net
-        ip: 10.1.0.1
-
-router_mappings:
-  - router: internal-to-monitoring
-    network: internal-net
-  - router: internal-to-monitoring
-    network: monitoring-net
-
-monitoring_targets:
-  - host: win-host
-    target: wazuh-manager
-  - host: linux-host
-    target: wazuh-manager
+routing:
+  - src: net-corp
+    dst: net-mgmt
+    allow: true
+  - src: net-mgmt
+    dst: net-corp
+    allow: true
