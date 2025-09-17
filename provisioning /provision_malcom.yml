@@ -1,0 +1,108 @@
+- hosts: all
+  become: true
+  vars:
+    # Default values - platform APG vars override if used
+    malcolm_repo_url: "{{ lookup('env','MALCOLM_REPO_URL') | default('https://github.com/your-org/malcolm.git') }}"
+    malcolm_repo_revision: "{{ lookup('env','MALCOLM_REPO_REV') | default('main') }}"
+    docker_users:
+      - admin
+  tasks:
+    - name: Ensure apt cache is up to date
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - git
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker APT repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
+
+    - name: Install Docker Engine and components
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+        update_cache: yes
+
+    - name: Install Docker Compose plugin (if available)
+      apt:
+        name: docker-compose-plugin
+        state: present
+      ignore_errors: yes
+
+    - name: Ensure docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add users to docker group
+      user:
+        name: "{{ item }}"
+        groups: docker
+        append: yes
+      loop: "{{ docker_users }}"
+      ignore_errors: yes
+
+    - name: Create workspace for malcolm
+      file:
+        path: /opt/malcolm
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Clone Malcolm repo (or update)
+      git:
+        repo: "{{ malcolm_repo_url }}"
+        dest: /opt/malcolm
+        version: "{{ malcolm_repo_revision }}"
+        force: yes
+        accept_hostkey: yes
+
+    - name: Create marker file to show provisioning completed
+      copy:
+        dest: /var/lab_logs/malcolm_provisioned.txt
+        content: |
+          malcolm provisioned on {{ ansible_date_time.iso8601 }}
+          repo: {{ malcolm_repo_url }}
+          revision: {{ malcolm_repo_revision }}
+        mode: '0644'
+
+    - name: Print next-steps instructions to lab log
+      copy:
+        dest: /var/lab_logs/malcolm_next_steps.txt
+        content: |
+          Malcolm repo cloned to /opt/malcolm
+          To build/start Malcolm, SSH into this host and follow the Malcolm repository README.
+          Typical next steps (may vary by repo):
+            cd /opt/malcolm
+            # read README.md for exact build instructions
+            # e.g. ./build.sh  OR  docker compose up -d
+            # Ensure the host has sufficient RAM and disk before running the build.
+        mode: '0644'
+
+    - name: Show quick guidance on console
+      debug:
+        msg:
+          - "Provisioning finished. Malcolm repo: {{ malcolm_repo_url }} @ {{ malcolm_repo_revision }}"
+          - "See /var/lab_logs/malcolm_next_steps.txt on the host for next steps."
