@@ -1,0 +1,11 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: Update apt
+      apt: { update_cache: yes }
+
+    - name: Create marker
+      copy:
+        dest: /var/lab_logs/victim_provisioned.txt
+        content: "victim provisioned on {{ ansible_date_time.iso8601 }}"
+        mode: '0644'

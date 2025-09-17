@@ -1,21 +1,20 @@
-name: malcolm-monitoring-topology
+name: malcolm-minimal-topology
 
 networks:
   - name: mgmt
-    cidr: 10.40.10.0/24
+    cidr: 10.50.10.0/24
     accessible_by_user: true
-
   - name: lab
-    cidr: 192.168.60.0/24
-    accessible_by_user: false
+    cidr: 192.168.70.0/24
+    accessible_by_user: true
 
 nodes:
   - name: malcolm-host
     base_box:
-      image: ubuntu-22-image       # <-- REPLACE with your Image Pool image id/name
+      image: ubuntu-22-image     # <-- REPLACE med image i din pool
       mgmt_user: admin
       mgmt_protocol: ssh
-    flavor: large                  # bruk større flavour for Malcolm
+    flavor: large                # anbefalt for Malcolm (juster etter behov)
     networks:
       - mgmt
     provisioning:
@@ -23,7 +22,20 @@ nodes:
     monitor_groups:
       - monitor-os
 
-  - name: victim-vm-01
+  - name: attacker-vm
+    base_box:
+      image: ubuntu-22-image
+      mgmt_user: attacker
+      mgmt_protocol: ssh
+    flavor: small
+    networks:
+      - lab
+    provisioning:
+      playbook: provisioning/provision_attacker.yml
+    monitor_groups:
+      - monitor-os
+
+  - name: victim-vm
     base_box:
       image: ubuntu-22-image
       mgmt_user: trainee
@@ -33,18 +45,5 @@ nodes:
       - lab
     provisioning:
       playbook: provisioning/provision_victim.yml
-    monitor_groups:
-      - monitor-os
-
-  - name: attacker-vm-01
-    base_box:
-      image: kali-linux-image
-      mgmt_user: attacker
-      mgmt_protocol: ssh
-    flavor: small
-    networks:
-      - lab
-    provisioning:
-      playbook: provisioning/provision_attacker.yml
     monitor_groups:
       - monitor-os

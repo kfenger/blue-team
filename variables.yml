@@ -1,9 +1,10 @@
 apg:
   - name: malcolm_repo_url
     type: string
-    default: "https://github.com/your-org/malcolm.git"
-    description: "Git clone URL for Malcolm repo to be cloned on the VM. Replace with official repo."
+    default: "https://github.com/center-for-threat-informed-defense/malcolm"
   - name: malcolm_repo_revision
     type: string
     default: "main"
-    description: "Branch / tag / commit to check out"
+  - name: run_attack_on_start
+    type: boolean
+    default: false
