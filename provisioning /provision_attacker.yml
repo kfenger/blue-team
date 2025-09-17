@@ -1,64 +1,47 @@
 - hosts: all
+  gather_facts: true
   become: true
-  vars:
-    malcolm_repo_url: "{{ apg_malcolm_repo_url | default('https://github.com/center-for-threat-informed-defense/malcolm') }}"
-    malcolm_repo_revision: "{{ apg_malcolm_repo_revision | default('main') }}"
   tasks:
-    - name: Update apt cache
-      apt: { update_cache: yes }
-
-    - name: Install prerequisites
+    - name: Update apt
       apt:
-        name: [apt-transport-https, ca-certificates, curl, gnupg, lsb-release, git, jq]
-        state: present
-
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Add Docker repo
-      apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-        state: present
-
-    - name: Install Docker & containerd
-      apt:
-        name: [docker-ce, docker-ce-cli, containerd.io]
-        state: present
         update_cache: yes
 
-    - name: Ensure docker is running
-      service: { name: docker, state: started, enabled: yes }
+    - name: Install tcpreplay and tcpdump
+      apt:
+        name:
+          - tcpreplay
+          - tcpdump
+          - python3
+          - python3-pip
+        state: present
 
-    - name: Create workspace for malcolm
-      file: { path: /opt/malcolm, state: directory, mode: '0755' }
+    - name: Create pcaps dir
+      file:
+        path: /opt/pcaps
+        state: directory
+        mode: '0755'
 
-    - name: Clone Malcolm repo
-      git:
-        repo: "{{ malcolm_repo_url }}"
-        dest: /opt/malcolm
-        version: "{{ malcolm_repo_revision }}"
-        force: yes
-        accept_hostkey: yes
+    - name: Copy sample pcap (from repo attacker_files/)
+      copy:
+        src: ../attacker_files/sample_attack.pcap
+        dest: /opt/pcaps/sample_attack.pcap
+        mode: '0644'
+      ignore_errors: yes
+
+    - name: Copy run_attack.sh
+      copy:
+        src: ../attacker_files/run_attack.sh
+        dest: /usr/local/bin/run_attack.sh
+        mode: '0755'
 
     - name: Create lab log directory
-      file: { path: /var/lab_logs, state: directory, mode: '0755' }
+      file:
+        path: /var/lab_logs
+        state: directory
+        mode: '0755'
 
-    - name: Write provision marker
+    - name: Write attacker marker
       copy:
-        dest: /var/lab_logs/malcolm_provisioned.txt
-        content: |
-          malcolm provisioned on {{ ansible_date_time.iso8601 }}
-          repo: {{ malcolm_repo_url }} @ {{ malcolm_repo_revision }}
-        mode: '0644'
-
-    - name: Write next steps note
-      copy:
-        dest: /var/lab_logs/malcolm_next_steps.txt
-        content: |
-          Malcolm repo cloned to /opt/malcolm.
-          To start Malcolm manually:
-            ssh to this host -> cd /opt/malcolm -> read README -> run docker compose up -d
-          Ensure sufficient RAM/disk before start.
+        dest: /var/lab_logs/attacker_provisioned.txt
+        content: "attacker provisioned on {{ ansible_date_time.iso8601 }}"
         mode: '0644'

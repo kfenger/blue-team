@@ -1,40 +1,67 @@
 - hosts: all
+  gather_facts: true
   become: true
   vars:
     malcolm_repo_url: "{{ apg_malcolm_repo_url | default('https://github.com/center-for-threat-informed-defense/malcolm') }}"
     malcolm_repo_revision: "{{ apg_malcolm_repo_revision | default('main') }}"
+    docker_users: ["admin"]
   tasks:
     - name: Update apt cache
-      apt: { update_cache: yes }
+      apt:
+        update_cache: yes
 
     - name: Install prerequisites
       apt:
-        name: [apt-transport-https, ca-certificates, curl, gnupg, lsb-release, git, jq]
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - git
+          - jq
         state: present
 
     - name: Add Docker GPG key
       apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
+        url: https://download.docker.com/linux/debian/gpg
         state: present
 
-    - name: Add Docker repo
+    - name: Add Docker APT repo
       apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
         state: present
 
-    - name: Install Docker & containerd
+    - name: Install Docker and containerd
       apt:
-        name: [docker-ce, docker-ce-cli, containerd.io]
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
         state: present
         update_cache: yes
 
-    - name: Ensure docker is running
-      service: { name: docker, state: started, enabled: yes }
+    - name: Ensure docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add users to docker group
+      user:
+        name: "{{ item }}"
+        groups: docker
+        append: yes
+      loop: "{{ docker_users }}"
+      ignore_errors: yes
 
     - name: Create workspace for malcolm
-      file: { path: /opt/malcolm, state: directory, mode: '0755' }
+      file:
+        path: /opt/malcolm
+        state: directory
+        mode: '0755'
 
-    - name: Clone Malcolm repo
+    - name: Clone Malcolm repo (or update)
       git:
         repo: "{{ malcolm_repo_url }}"
         dest: /opt/malcolm
@@ -43,7 +70,10 @@
         accept_hostkey: yes
 
     - name: Create lab log directory
-      file: { path: /var/lab_logs, state: directory, mode: '0755' }
+      file:
+        path: /var/lab_logs
+        state: directory
+        mode: '0755'
 
     - name: Write provision marker
       copy:
@@ -60,5 +90,23 @@
           Malcolm repo cloned to /opt/malcolm.
           To start Malcolm manually:
             ssh to this host -> cd /opt/malcolm -> read README -> run docker compose up -d
-          Ensure sufficient RAM/disk before start.
+          Ensure sufficient RAM/disk before starting.
         mode: '0644'
+
+    - name: Optionally start Malcolm stack (if APG var set)
+      block:
+        - name: Attempt to run docker compose up -d
+          shell: |
+            cd /opt/malcolm
+            # try docker compose up -d; specific command may vary by repo
+            docker compose up -d
+          args:
+            chdir: /opt/malcolm
+          register: malcolm_start
+          failed_when: false
+        - name: Write malcolm_start log
+          copy:
+            dest: /var/lab_logs/malcolm_start.log
+            content: "{{ malcolm_start.stdout | default('no output') }}\n\n{{ malcolm_start.stderr | default('no stderr') }}"
+            mode: '0644'
+      when: apg_start_malcolm_automatically | default(False)

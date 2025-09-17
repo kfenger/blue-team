@@ -1,10 +1,18 @@
 - hosts: all
+  gather_facts: true
   become: true
   tasks:
     - name: Update apt
-      apt: { update_cache: yes }
+      apt:
+        update_cache: yes
 
-    - name: Create marker
+    - name: Create lab log directory
+      file:
+        path: /var/lab_logs
+        state: directory
+        mode: '0755'
+
+    - name: Write victim marker
       copy:
         dest: /var/lab_logs/victim_provisioned.txt
         content: "victim provisioned on {{ ansible_date_time.iso8601 }}"

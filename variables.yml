@@ -2,9 +2,14 @@ apg:
   - name: malcolm_repo_url
     type: string
     default: "https://github.com/center-for-threat-informed-defense/malcolm"
+    description: "Malcolm git repo URL som provision playbook skal klone"
+
   - name: malcolm_repo_revision
     type: string
     default: "main"
-  - name: run_attack_on_start
+    description: "Branch / tag / commit for Malcolm repo"
+
+  - name: start_malcolm_automatically
     type: boolean
     default: false
+    description: "Hvis true, vil en ekstra playbook forsøke å starte Malcolm med docker compose (krever store ressurser)."
